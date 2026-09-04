@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Morgenrapport — din nyhetsoversikt</title>
+<style>
+  :root{
+    --paper:#f7f5f0;
+    --ink:#1e1c18;
+    --ink-soft:#5b564c;
+    --line:#d8d3c6;
+    --accent:#1f4d43;
+    --accent-soft:#e4ece9;
+    --card:#ffffff;
+    --serif: "Iowan Old Style","Palatino Linotype","Georgia",serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+  header.masthead{
+    max-width:920px;
+    margin:0 auto;
+    padding:2.6rem 1.5rem 1.2rem;
+    border-bottom:2px solid var(--ink);
+  }
+  header.masthead .row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    flex-wrap:wrap;
+    gap:.5rem;
+  }
+  header.masthead h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:2.3rem;
+    margin:0;
+    letter-spacing:.2px;
+  }
+  header.masthead .dateline{
+    font-size:.85rem;
+    color:var(--ink-soft);
+  }
+  .header-actions{ display:flex; gap:.6rem; }
+  #settings-toggle, #refresh-btn{
+    background:none;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:.82rem;
+    padding:.4rem .8rem;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  #settings-toggle:hover{ background:var(--ink); color:var(--paper); }
+  #refresh-btn{ border-color:var(--accent); color:var(--accent); }
+  #refresh-btn:hover{ background:var(--accent); color:#fff; }
+  #refresh-btn:disabled{
+    opacity:.6;
+    cursor:default;
+    background:none;
+    color:var(--accent);
+  }
+
+  nav.categories{
+    max-width:920px;
+    margin:0 auto;
+    padding:1rem 1.5rem 0;
+    display:flex;
+    gap:1.3rem;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--line);
+  }
+  nav.categories button{
+    background:none;
+    border:none;
+    font-family:var(--sans);
+    font-size:.92rem;
+    color:var(--ink-soft);
+    padding:0 0 .8rem;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+  }
+  nav.categories button.active{
+    color:var(--ink);
+    border-bottom-color:var(--accent);
+    font-weight:600;
+  }
+
+  main{
+    max-width:920px;
+    margin:0 auto;
+    padding:1.4rem 1.5rem 4rem;
+  }
+
+  #status{
+    color:var(--ink-soft);
+    font-size:.88rem;
+    margin-bottom:1rem;
+  }
+
+  .article{
+    display:flex;
+    gap:1rem;
+    padding:1.15rem 0;
+    border-bottom:1px solid var(--line);
+    align-items:flex-start;
+  }
+  .article .content{ flex:1; min-width:0; }
+  .article h2{
+    font-family:var(--serif);
+    font-size:1.28rem;
+    line-height:1.3;
+    margin:0 0 .35rem;
+    font-weight:600;
+  }
+  .article h2 a{
+    color:var(--ink);
+    text-decoration:none;
+  }
+  .article h2 a:hover{ color:var(--accent); text-decoration:underline; }
+  .article p.ingress{
+    margin:0 0 .5rem;
+    color:#33312c;
+    font-size:.97rem;
+    line-height:1.5;
+    max-width:68ch;
+  }
+  .article .meta{
+    font-size:.78rem;
+    color:var(--ink-soft);
+  }
+  .article .meta .source{ color:var(--accent); font-weight:600; }
+  .hide-btn{
+    flex-shrink:0;
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:.95rem;
+    line-height:1;
+  }
+  .hide-btn:hover{ border-color:var(--ink); color:var(--ink); }
+
+  #empty-state{
+    padding:3rem 0;
+    text-align:center;
+    color:var(--ink-soft);
+  }
+  #restore-hidden{
+    background:none;
+    border:none;
+    color:var(--accent);
+    text-decoration:underline;
+    cursor:pointer;
+    font-size:.85rem;
+    padding:0;
+  }
+
+  /* Settings panel */
+  #settings-panel{
+    position:fixed;
+    top:0; right:0;
+    width:340px;
+    max-width:90vw;
+    height:100%;
+    background:var(--card);
+    border-left:1px solid var(--line);
+    box-shadow:-6px 0 24px rgba(0,0,0,.08);
+    transform:translateX(100%);
+    transition:transform .25s ease;
+    overflow-y:auto;
+    padding:1.4rem 1.3rem 3rem;
+    z-index:50;
+  }
+  #settings-panel.open{ transform:translateX(0); }
+  #settings-panel h3{
+    font-family:var(--serif);
+    font-size:1.15rem;
+    margin:1.4rem 0 .6rem;
+  }
+  #settings-panel h3:first-child{ margin-top:0; }
+  #settings-panel .close-btn{
+    float:right;
+    background:none;border:none;
+    font-size:1.2rem;cursor:pointer;color:var(--ink-soft);
+  }
+  .source-row{
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    padding:.3rem 0;
+    font-size:.88rem;
+  }
+  .source-row label{ flex:1; }
+  .source-row .cat-tag{
+    font-size:.7rem;
+    background:var(--accent-soft);
+    color:var(--accent);
+    padding:.1rem .4rem;
+    border-radius:3px;
+  }
+  #custom-source-form{
+    display:flex;
+    flex-direction:column;
+    gap:.5rem;
+    margin-top:.5rem;
+  }
+  #custom-source-form input, #custom-source-form select{
+    font-family:var(--sans);
+    font-size:.85rem;
+    padding:.4rem .5rem;
+    border:1px solid var(--line);
+    border-radius:3px;
+  }
+  #custom-source-form button{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:.5rem;
+    border-radius:3px;
+    cursor:pointer;
+    font-size:.85rem;
+  }
+  .custom-source-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:.85rem;
+    padding:.35rem 0;
+    border-bottom:1px solid var(--line);
+  }
+  .custom-source-row button{
+    background:none;border:none;color:#a33;cursor:pointer;font-size:.8rem;
+  }
+  #overlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.25);
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease;
+    z-index:40;
+  }
+  #overlay.open{ opacity:1; pointer-events:auto; }
+
+  @media (max-width:600px){
+    header.masthead h1{ font-size:1.7rem; }
+    .article{ gap:.7rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="row">
+    <h1>Morgenrapport</h1>
+    <div class="header-actions">
+      <button id="refresh-btn" title="Hent nye saker fra alle kilder nå">↻ Oppdater nå</button>
+      <button id="settings-toggle">Innstillinger</button>
+    </div>
+  </div>
+  <div class="dateline" id="dateline"></div>
+</header>
+
+<nav class="categories" id="category-nav"></nav>
+
+<main>
+  <div id="status"></div>
+  <div id="feed"></div>
+  <div id="empty-state" style="display:none;">
+    Ingen saker å vise med gjeldende filter.
+    <br/><button id="restore-hidden">Vis skjulte saker igjen</button>
+  </div>
+</main>
+
+<div id="overlay"></div>
+<aside id="settings-panel">
+  <button class="close-btn" id="settings-close">✕</button>
+  <h3>Kilder</h3>
+  <div id="source-list"></div>
+
+  <h3>Legg til egen kilde</h3>
+  <form id="custom-source-form">
+    <input type="text" id="cs-name" placeholder="Navn (f.eks. Min favorittblogg)" required />
+    <input type="url" id="cs-url" placeholder="RSS-lenke (https://...)" required />
+    <select id="cs-category">
+      <option value="innenriks">Innenriks</option>
+      <option value="utenriks">Utenriks</option>
+      <option value="okonomi">Økonomi</option>
+      <option value="teknologi">Teknologi</option>
+      <option value="naringsliv">Næringsliv</option>
+      <option value="hobby">Hobby</option>
+      <option value="annet">Annet</option>
+    </select>
+    <button type="submit">Legg til kilde</button>
+  </form>
+  <div id="custom-source-list"></div>
+
+  <h3>Skjulte saker</h3>
+  <button id="restore-hidden-2" style="background:none;border:1px solid var(--line);padding:.4rem .7rem;border-radius:3px;cursor:pointer;font-size:.82rem;">
+    Vis alle skjulte saker igjen
+  </button>
+</aside>
+
+<script>
+const CATEGORY_LABELS = {
+  innenriks: "Innenriks",
+  utenriks: "Utenriks",
+  okonomi: "Økonomi",
+  teknologi: "Teknologi",
+  naringsliv: "Næringsliv",
+  hobby: "Hobby",
+  annet: "Annet"
+};
+
+const store = {
+  get(key, fallback){
+    try{ return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+    catch(e){ return fallback; }
+  },
+  set(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+};
+
+let hiddenIds = new Set(store.get("hiddenIds", []));
+let disabledSources = new Set(store.get("disabledSources", []));
+let customSources = store.get("customSources", []); // [{name,url,category}]
+let currentCategory = "alle";
+
+let baseItems = [];      // fra news.json (forhåndshentet av GitHub Action)
+let customItems = [];    // hentet live i nettleseren for egendefinerte kilder
+let baseSources = [];    // fra sources.json
+
+async function loadData(){
+  const statusEl = document.getElementById("status");
+  try{
+    const [newsRes, sourcesRes] = await Promise.all([
+      fetch("news.json", { cache: "no-store" }),
+      fetch("sources.json", { cache: "no-store" })
+    ]);
+    const news = await newsRes.json();
+    baseItems = news.items || [];
+    baseSources = await sourcesRes.json();
+
+    const generated = new Date(news.generated_at);
+    document.getElementById("dateline").textContent =
+      "Sist oppdatert: " + generated.toLocaleString("no-NO", { dateStyle:"long", timeStyle:"short" });
+  }catch(e){
+    statusEl.textContent = "Klarte ikke laste news.json ennå. Kjør GitHub Action-en («Oppdater nyheter») én gang, eller vent til første planlagte kjøring.";
+  }
+
+  await loadCustomSources();
+  renderSourceSettings();
+  renderCategoryNav();
+  render();
+}
+
+async function loadCustomSources(){
+  customItems = [];
+  const results = await Promise.allSettled(
+    customSources.map(src => fetchViaProxy(src))
+  );
+  results.forEach(r => {
+    if(r.status === "fulfilled") customItems.push(...r.value);
+  });
+}
+
+let isRefreshing = false;
+
+async function refreshNow(){
+  if(isRefreshing) return;
+  isRefreshing = true;
+
+  const btn = document.getElementById("refresh-btn");
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Oppdaterer…";
+  document.getElementById("status").textContent = "Henter nye saker fra alle kilder …";
+
+  const sources = allSources(); // faste kilder + egendefinerte
+  const results = await Promise.allSettled(sources.map(src => fetchViaProxy(src)));
+
+  const oldBySource = {};
+  [...baseItems, ...customItems].forEach(item => {
+    (oldBySource[item.source] ||= []).push(item);
+  });
+
+  const merged = [];
+  let failedCount = 0;
+  results.forEach((result, i) => {
+    const src = sources[i];
+    if(result.status === "fulfilled"){
+      merged.push(...result.value);
+    }else{
+      // Kilden svarte ikke akkurat nå — behold det vi allerede hadde for den,
+      // i stedet for å la sakene forsvinne.
+      console.warn(`Klarte ikke oppdatere «${src.name}»:`, result.reason);
+      failedCount++;
+      merged.push(...(oldBySource[src.name] || []));
+    }
+  });
+
+  baseItems = merged;
+  customItems = [];
+
+  const now = new Date();
+  let dateLabel = "Sist oppdatert: " + now.toLocaleString("no-NO", { dateStyle:"long", timeStyle:"short" }) + " (manuell oppdatering)";
+  if(failedCount > 0){
+    dateLabel += ` — ${failedCount} kilde${failedCount === 1 ? "" : "r"} svarte ikke, viser forrige versjon for den${failedCount === 1 ? "" : "e"}`;
+  }
+  document.getElementById("dateline").textContent = dateLabel;
+
+  btn.disabled = false;
+  btn.textContent = originalLabel;
+  isRefreshing = false;
+  render();
+}
+
+// Samme FNV-1a-hash som scripts/fetch_news.py bruker, slik at en sak får
+// SAMME id enten den kommer fra den daglige news.json eller fra en live
+// oppdatering i nettleseren — da forblir en skjult sak skjult etter "Oppdater nå".
+function fnv1a(str){
+  let h = 0x811c9dc5;
+  const bytes = new TextEncoder().encode(str);
+  for(let i=0;i<bytes.length;i++){
+    h ^= bytes[i];
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8,"0");
+}
+function makeId(link, title){ return fnv1a(`${link}|${title}`); }
+
+async function fetchViaProxy(source){
+  // Bruker rss2json sin gratis offentlige API til å hente RSS direkte i
+  // nettleseren (unngår CORS-problemer). Brukes både for egendefinerte kilder
+  // og når man trykker "Oppdater nå" for de faste kildene. Har begrenset
+  // kapasitet — fungerer fint til personlig bruk, men kan feile ved høy trafikk
+  // eller for kilder som ikke tilbyr RSS i det hele tatt.
+  const apiUrl = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(source.url);
+  const res = await fetch(apiUrl);
+  const data = await res.json();
+  if(data.status !== "ok") throw new Error("rss2json ga status: " + data.status);
+  return (data.items || []).slice(0, 25).map(item => ({
+    id: makeId(item.link || "", item.title || ""),
+    title: item.title,
+    ingress: (item.description || "").replace(/<[^>]+>/g," ").trim().slice(0,220),
+    link: item.link,
+    source: source.name,
+    category: source.category,
+    published: item.pubDate || new Date().toISOString()
+  }));
+}
+
+function allSources(){
+  return [...baseSources, ...customSources];
+}
+
+function visibleItems(){
+  const all = [...baseItems, ...customItems];
+  return all
+    .filter(item => !disabledSources.has(item.source))
+    .filter(item => !hiddenIds.has(item.id))
+    .filter(item => currentCategory === "alle" || item.category === currentCategory)
+    .sort((a,b) => new Date(b.published) - new Date(a.published));
+}
+
+function renderCategoryNav(){
+  const nav = document.getElementById("category-nav");
+  const cats = ["alle", ...new Set(allSources().map(s => s.category))];
+  nav.innerHTML = "";
+  cats.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.textContent = cat === "alle" ? "Alle" : (CATEGORY_LABELS[cat] || cat);
+    btn.className = cat === currentCategory ? "active" : "";
+    btn.addEventListener("click", () => {
+      currentCategory = cat;
+      renderCategoryNav();
+      render();
+    });
+    nav.appendChild(btn);
+  });
+}
+
+function render(){
+  const feed = document.getElementById("feed");
+  const items = visibleItems();
+  feed.innerHTML = "";
+  document.getElementById("empty-state").style.display = items.length ? "none" : "block";
+  document.getElementById("status").textContent = items.length + " saker";
+
+  items.forEach(item => {
+    const el = document.createElement("article");
+    el.className = "article";
+    const date = new Date(item.published);
+    const dateStr = isNaN(date) ? "" : date.toLocaleString("no-NO", { dateStyle:"short", timeStyle:"short" });
+
+    el.innerHTML = `
+      <div class="content">
+        <h2><a href="${item.link}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a></h2>
+        <p class="ingress">${escapeHtml(item.ingress || "")}</p>
+        <div class="meta"><span class="source">${escapeHtml(item.source)}</span> · ${dateStr}</div>
+      </div>
+      <button class="hide-btn" title="Skjul denne saken" data-id="${item.id}">✕</button>
+    `;
+    el.querySelector(".hide-btn").addEventListener("click", () => {
+      hiddenIds.add(item.id);
+      store.set("hiddenIds", [...hiddenIds]);
+      render();
+    });
+    feed.appendChild(el);
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str || "";
+  return div.innerHTML;
+}
+
+function renderSourceSettings(){
+  const list = document.getElementById("source-list");
+  list.innerHTML = "";
+  baseSources.forEach(src => {
+    const row = document.createElement("div");
+    row.className = "source-row";
+    const checked = !disabledSources.has(src.name) ? "checked" : "";
+    row.innerHTML = `
+      <input type="checkbox" id="src-${btoa(src.name)}" ${checked} />
+      <label for="src-${btoa(src.name)}">${escapeHtml(src.name)}</label>
+      <span class="cat-tag">${CATEGORY_LABELS[src.category] || src.category}</span>
+    `;
+    row.querySelector("input").addEventListener("change", (e) => {
+      if(e.target.checked) disabledSources.delete(src.name);
+      else disabledSources.add(src.name);
+      store.set("disabledSources", [...disabledSources]);
+      render();
+    });
+    list.appendChild(row);
+  });
+
+  const customList = document.getElementById("custom-source-list");
+  customList.innerHTML = "";
+  customSources.forEach((src, idx) => {
+    const row = document.createElement("div");
+    row.className = "custom-source-row";
+    row.innerHTML = `<span>${escapeHtml(src.name)} <span class="cat-tag">${CATEGORY_LABELS[src.category]||src.category}</span></span>
+      <button data-idx="${idx}">Fjern</button>`;
+    row.querySelector("button").addEventListener("click", async () => {
+      customSources.splice(idx, 1);
+      store.set("customSources", customSources);
+      renderSourceSettings();
+      renderCategoryNav();
+      await loadCustomSources();
+      render();
+    });
+    customList.appendChild(row);
+  });
+}
+
+document.getElementById("custom-source-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = document.getElementById("cs-name").value.trim();
+  const url = document.getElementById("cs-url").value.trim();
+  const category = document.getElementById("cs-category").value;
+  if(!name || !url) return;
+  customSources.push({ name, url, category });
+  store.set("customSources", customSources);
+  e.target.reset();
+  renderSourceSettings();
+  renderCategoryNav();
+  await loadCustomSources();
+  render();
+});
+
+document.getElementById("restore-hidden").addEventListener("click", () => {
+  hiddenIds = new Set();
+  store.set("hiddenIds", []);
+  render();
+});
+document.getElementById("restore-hidden-2").addEventListener("click", () => {
+  hiddenIds = new Set();
+  store.set("hiddenIds", []);
+  render();
+});
+
+const panel = document.getElementById("settings-panel");
+const overlay = document.getElementById("overlay");
+document.getElementById("refresh-btn").addEventListener("click", refreshNow);
+
+document.getElementById("settings-toggle").addEventListener("click", () => {
+  panel.classList.add("open"); overlay.classList.add("open");
+});
+document.getElementById("settings-close").addEventListener("click", closePanel);
+overlay.addEventListener("click", closePanel);
+function closePanel(){ panel.classList.remove("open"); overlay.classList.remove("open"); }
+
+loadData();
+</script>
+</body>
+</html>

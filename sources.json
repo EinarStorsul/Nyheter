@@ -1,0 +1,21 @@
+[
+  { "name": "NRK – Forside", "url": "https://www.nrk.no/toppsaker.rss", "category": "innenriks" },
+  { "name": "NRK – Norge", "url": "https://www.nrk.no/norge/toppsaker.rss", "category": "innenriks" },
+  { "name": "Aftenposten", "url": "https://www.aftenposten.no/rss", "category": "innenriks" },
+  { "name": "Nettavisen", "url": "https://www.nettavisen.no/rss", "category": "innenriks" },
+
+  { "name": "NRK – Urix", "url": "https://www.nrk.no/urix/toppsaker.rss", "category": "utenriks" },
+  { "name": "BBC World", "url": "http://feeds.bbci.co.uk/news/world/rss.xml", "category": "utenriks" },
+  { "name": "Al Jazeera", "url": "https://www.aljazeera.com/xml/rss/all.xml", "category": "utenriks" },
+
+  { "name": "DN", "url": "https://www.dn.no/rss/", "category": "okonomi" },
+  { "name": "E24", "url": "https://e24.no/rss2/", "category": "okonomi" },
+  { "name": "Finansavisen", "url": "https://www.finansavisen.no/rss", "category": "okonomi" },
+
+  { "name": "TechCrunch", "url": "https://techcrunch.com/feed/", "category": "teknologi" },
+  { "name": "Mashable", "url": "https://mashable.com/feeds/rss/all", "category": "teknologi" },
+  { "name": "Digi.no", "url": "https://www.digi.no/rss", "category": "teknologi" },
+
+  { "name": "DN – Næringsliv", "url": "https://www.dn.no/naringsliv/rss/", "category": "naringsliv" },
+  { "name": "E24 – Næringsliv", "url": "https://e24.no/naeringsliv/rss2/", "category": "naringsliv" }
+]
